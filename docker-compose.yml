@@ -1,0 +1,30 @@
+version: '2'
+services:
+  target:
+    build:
+      context: ./target
+      dockerfile: Dockerfile
+    container_name: target
+    ports:
+      - "8080:80"    # Expose Apache on http://localhost:8080
+    networks:
+      - testnet
+
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: agent
+    depends_on:
+      - target
+    environment:
+      - TARGET_HOST=target
+      - TARGET_USER=root
+      - TARGET_PASS=rootpass
+      - TARGET_SSH_PORT=22
+    networks:
+      - testnet
+
+networks:
+  testnet:
+    driver: bridge
