@@ -17,6 +17,8 @@ services:
     container_name: agent
     depends_on:
       - target
+    env_file:
+      - .env
     environment:
       - TARGET_HOST=target
       - TARGET_USER=root
