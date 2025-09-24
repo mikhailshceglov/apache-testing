@@ -28,21 +28,27 @@ docker compose version
 ---
 
 ## 2. Структура проекта
-
 ```
 .
-├── docker-compose.yml
-├── target/
+├── agent
 │   ├── Dockerfile
-│   └── entrypoint.sh
-└── agent/
+│   └── tests
+│       ├── conftest.py
+│       ├── test_server.py
+│       ├── test_smoke_coreutils.py
+│       └── utils.py
+├── docker-compose.yml
+├── image
+│   └── allure.png
+├── README.md
+├── reports
+│   └── allure-results/
+└── target
     ├── Dockerfile
-    └── tests/
-        ├── test_server.py
-        └── test_smoke_coreutils.py   # смок‑тесты tar/ln
+    └── entrypoint.sh
 ```
 
-> **Глобальная идея:** Два сервиса — `target` (Apache) и `agent` (pytest). Всё разнесено по папкам.
+> Папка `reports/allure-results` заполняется автоматически после прогона тестов и содержит артефакты Allure.
 
 ---
 
