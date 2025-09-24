@@ -187,3 +187,30 @@ docker compose run --rm --no-deps \
 ```
 
 > Ключ `--no-deps` не будет поднимать локальный контейнер `target`. Все проверки выполняются по SSH **на внешнем сервере** (процессы, логи, `curl http://localhost/...`).
+
+
+## 12. Allure‑отчёт
+
+После прогона тестов результаты лежат в `./reports/allure-results`.
+
+### Allure CLI на хосте
+
+Если CLI ещё не установлен:
+
+```bash
+sudo apt-get update && sudo apt-get install -y nodejs npm
+
+sudo npm i -g allure-commandline
+
+allure --version
+
+# открыть отчёт (поднимет локальный веб‑сервер и откроет браузер)
+allure serve ./reports/allure-results
+
+# (опционально) сгенерировать HTML
+allure generate ./reports/allure-results -o ./reports/allure-report --clean
+
+# затем откройте файл ./reports/allure-report/index.html
+```
+
+![Allure report](./image/allure.png)

@@ -26,6 +26,8 @@ services:
       - TARGET_SSH_PORT=22
     networks:
       - testnet
+    volumes:
+      - ./reports:/reports
 
 networks:
   testnet:

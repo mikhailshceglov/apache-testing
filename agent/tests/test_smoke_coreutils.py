@@ -1,15 +1,22 @@
 import pytest
 from utils import run_cmd
+import allure
 
+@allure.feature("Coreutils")
+@allure.story("tar present")
 def test_tar_present(ssh_client):
     code, out, err = run_cmd(ssh_client, "tar --version")
     assert code == 0, f"tar not available: {err or out}"
     assert "tar" in out.lower()
 
+@allure.feature("Coreutils")
+@allure.story("tar present")
 def test_ln_present(ssh_client):
     code, out, err = run_cmd(ssh_client, "ln --version || (busybox ln --help && echo busybox)")
     assert code == 0 or "busybox" in (out + err).lower(), f"ln not available: {err or out}"
 
+@allure.feature("Coreutils")
+@allure.story("tar present")
 def test_tar_functional_pack_and_unpack(ssh_client):
     cmd = r'''
     set -eu
@@ -33,7 +40,8 @@ def test_tar_functional_pack_and_unpack(ssh_client):
     code, out, err = run_cmd(ssh_client, cmd)
     assert code == 0, f"tar functional test failed: {err or out}"
 
-
+@allure.feature("Coreutils")
+@allure.story("tar present")
 def test_ln_functional_symlink_and_hardlink(ssh_client):
     cmd = r'''
     set -eu

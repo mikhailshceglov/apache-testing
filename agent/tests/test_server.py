@@ -1,12 +1,17 @@
 from datetime import datetime
 import pytest
 from utils import run_cmd
+import allure
 
+@allure.feature("Apache")
+@allure.story("Process")
 def test_apache_running(ssh_client):
     exit_status, output, error = run_cmd(ssh_client, "pidof apache2")
     assert exit_status == 0, "Apache2 process is not running"
     assert output.strip() != "", "Apache2 process ID not found"
 
+@allure.feature("Apache")
+@allure.story("Process")
 def test_error_logs(ssh_client):
     exit_status, curr_time_str, _ = run_cmd(ssh_client, "date +%s")
     
@@ -42,12 +47,16 @@ def test_error_logs(ssh_client):
                 recent_errors.append(line)
     assert not recent_errors, f"Error entries found in Apache logs within last 10 minutes: {recent_errors}"
 
+@allure.feature("Apache")
+@allure.story("Process")
 def test_index_page(ssh_client):
     i, body, j = run_cmd(ssh_client, "curl -s http://localhost/index")
     i, status_code, j = run_cmd(ssh_client, "curl -s -o /dev/null -w '%{http_code}' http://localhost/index")
     assert status_code.strip() == "200", f"Expected HTTP 200, got {status_code}"
     assert "Hello from Apache container" in body, "Index page content is incorrect or not served"
 
+@allure.feature("Apache")
+@allure.story("Process")
 def test_404_page(ssh_client):
     i, status_code, j = run_cmd(ssh_client, "curl -s -o /dev/null -w '%{http_code}' http://localhost/nonexistent_page")
     assert status_code.strip() == "404", f"Expected 404 for nonexistent page, got {status_code}"
