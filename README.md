@@ -77,6 +77,11 @@ curl -i http://localhost:8080/index
 
 ### 3.3. Запуск тестов (`agent`)
 
+(!) Эту комнаду прописать 1 раз (подробнее в пункте 8)
+```bash
+cp .env.example .env
+```
+
 ```bash
 docker-compose run --rm agent
 ```
