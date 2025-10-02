@@ -86,7 +86,7 @@ cp .env.example .env
 docker-compose run --rm agent
 ```
 
-Тесты подключатся к target по SSH и выведут отчёт в консоль.
+Тесты подключатся к target по SSH и выведут отчёт в консоль!
 
 ---
 
