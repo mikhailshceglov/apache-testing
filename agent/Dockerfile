@@ -1,9 +1,7 @@
 FROM debian:bookworm-slim
 
-RUN apt-get update && apt-get install -y \
-    python3 python3-pip python3-venv \
-    openssh-client curl \
- && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Создаём виртуальное окружение
 RUN python3 -m venv /opt/venv
