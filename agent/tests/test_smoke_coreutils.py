@@ -1,78 +1,83 @@
-import pytest
-from utils import run_cmd
-import allure
+from conftest import run_cmd
 
-@allure.feature("Coreutils")
-@allure.story("tar present")
+def _ok(code, out, err, msg):
+    assert code == 0, f"{msg}\nexit={code}\nstdout:\n{out}\nstderr:\n{err}"
+
+
 def test_tar_present(ssh_client):
     code, out, err = run_cmd(ssh_client, "tar --version")
-    assert code == 0, f"tar not available: {err or out}"
-    assert "tar" in out.lower()
+    _ok(code, out, err, "tar отсутствует или не запускается")
 
-@allure.feature("Coreutils")
-@allure.story("tar present")
+
 def test_ln_present(ssh_client):
-    code, out, err = run_cmd(ssh_client, "ln --version || (busybox ln --help && echo busybox)")
-    assert code == 0 or "busybox" in (out + err).lower(), f"ln not available: {err or out}"
+    code, out, err = run_cmd(ssh_client, "ln --version")
+    _ok(code, out, err, "ln отсутствует или не запускается")
 
-@allure.feature("Coreutils")
-@allure.story("tar present")
+
 def test_tar_functional_pack_and_unpack(ssh_client):
-    cmd = r'''
-    set -eu
-    TMP_SRC="$(mktemp -d /tmp/smoke_tar_src.XXXXXX)"
-    TMP_DST="$(mktemp -d /tmp/smoke_tar_dst.XXXXXX)"
-    ARCHIVE="/tmp/smoke_tar_test.tar"
+    code, src, err = run_cmd(ssh_client, 'mktemp -d /tmp/smoke_tar_src.XXXXXX')
+    _ok(code, src, err, "mktemp src не создал директорию")
+    src = src.strip()
 
-    echo "hello tar" > "${TMP_SRC}/file.txt"
+    code, dst, err = run_cmd(ssh_client, 'mktemp -d /tmp/smoke_tar_dst.XXXXXX')
+    _ok(code, dst, err, "mktemp dst не создал директорию")
+    dst = dst.strip()
 
-    tar -cf "${ARCHIVE}" -C "${TMP_SRC}" .
+    archive = "/tmp/smoke_tar_test.tar"
 
-    tar -xf "${ARCHIVE}" -C "${TMP_DST}"
+    # создаём файл-образец
+    code, out, err = run_cmd(ssh_client, f'echo "hello tar" > "{src}/file.txt"')
+    _ok(code, out, err, "не смогли создать файл-образец")
 
-    # сравниваем побайтно
-    cmp -s "${TMP_SRC}/file.txt" "${TMP_DST}/file.txt"
+    # упаковка
+    code, out, err = run_cmd(ssh_client, f'tar -cf "{archive}" -C "{src}" .')
+    _ok(code, out, err, "ошибка при tar -cf")
 
-    # уборка
-    rm -rf "${TMP_SRC}" "${TMP_DST}" "${ARCHIVE}"
-    '''
-    
-    code, out, err = run_cmd(ssh_client, cmd)
-    assert code == 0, f"tar functional test failed: {err or out}"
+    # распаковка
+    code, out, err = run_cmd(ssh_client, f'tar -xf "{archive}" -C "{dst}"')
+    _ok(code, out, err, "ошибка при tar -xf")
 
-@allure.feature("Coreutils")
-@allure.story("tar present")
+    # сравнение
+    code, out, err = run_cmd(ssh_client, f'cmp -s "{src}/file.txt" "{dst}/file.txt"')
+    _ok(code, out, err, "распакованный файл отличается от исходного")
+
+    run_cmd(ssh_client, f'rm -rf "{src}" "{dst}" "{archive}"')
+
+
 def test_ln_functional_symlink_and_hardlink(ssh_client):
-    cmd = r'''
-    set -eu
-    TMP="$(mktemp -d /tmp/smoke_ln.XXXXXX)"
-    SRC="${TMP}/src.txt"
-    SYM="${TMP}/sym.txt"
-    HARD="${TMP}/hard.txt"
+    code, tmp, err = run_cmd(ssh_client, 'mktemp -d /tmp/smoke_ln.XXXXXX')
+    _ok(code, tmp, err, "mktemp не создал рабочую директорию")
+    tmp = tmp.strip()
 
-    echo "hello ln" > "${SRC}"
+    src = f"{tmp}/src.txt"
+    sym = f"{tmp}/sym.txt"
+    hard = f"{tmp}/hard.txt"
 
-    ln -s "${SRC}" "${SYM}"
-    
-    # symlink существует?
-    test -L "${SYM}"
-    
-    # содержимое совпадает?
-    cmp -s "${SRC}" "${SYM}"
+    # исходный файл
+    code, out, err = run_cmd(ssh_client, f'echo "hello ln" > "{src}"')
+    _ok(code, out, err, "не смогли создать исходный файл")
 
-    # HARD LINK
-    ln "${SRC}" "${HARD}"
-    
-    # содержимое совпадает?
-    cmp -s "${SRC}" "${HARD}"
-    
-    # количество жёстких ссылок >= 2
-    LINKS_COUNT="$(stat -c %h "${SRC}")"
-    test "${LINKS_COUNT}" -ge 2
+    # символьная ссылка
+    code, out, err = run_cmd(ssh_client, f'ln -s "{src}" "{sym}"')
+    _ok(code, out, err, "ошибка ln -s (символическая ссылка)")
 
-    # уборка
-    rm -rf "${TMP}"
-    '''
-    code, out, err = run_cmd(ssh_client, cmd)
-    assert code == 0, f"ln functional test failed: {err or out}"
+    code, out, err = run_cmd(ssh_client, f'test -L "{sym}"')
+    _ok(code, out, err, "символическая ссылка не распознана")
 
+    code, out, err = run_cmd(ssh_client, f'cmp -s "{src}" "{sym}"')
+    _ok(code, out, err, "символическая ссылка указывает хз куда")
+
+    # жёсткая ссылка
+    code, out, err = run_cmd(ssh_client, f'ln "{src}" "{hard}"')
+    _ok(code, out, err, "ошибка ln (жёсткая ссылка)")
+
+    # контент совпадает
+    code, out, err = run_cmd(ssh_client, f'cmp -s "{src}" "{hard}"')
+    _ok(code, out, err, "жёсткая ссылка указывает не на идентичный контент")
+
+    # кол-во жёстких ссылок >= 2
+    code, links, err = run_cmd(ssh_client, f'stat -c %h "{src}"')
+    _ok(code, links, err, "stat не отработал")
+    assert int(links.strip()) >= 2, f"ожидали >=2 жёстких ссылок, получили: {links}"
+
+    run_cmd(ssh_client, f'rm -rf "{tmp}"')

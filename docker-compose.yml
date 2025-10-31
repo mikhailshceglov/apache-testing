@@ -1,33 +1,29 @@
-version: '2'
 services:
   target:
-    build:
-      context: ./target
-      dockerfile: Dockerfile
-    container_name: target
+    build: ./target
     ports:
-      - "8080:80"    # Expose Apache on http://localhost:8080
-    networks:
-      - testnet
+      - "8080:80"
+    networks: [testnet]
 
   agent:
-    build:
-      context: ./agent
-      dockerfile: Dockerfile
-    container_name: agent
-    depends_on:
-      - target
-    env_file:
-      - .env
+    build: ./agent
     environment:
       - TARGET_HOST=target
       - TARGET_USER=root
       - TARGET_PASS=rootpass
       - TARGET_SSH_PORT=22
-    networks:
-      - testnet
     volumes:
-      - ./reports:/reports
+      - ./reports/allure-results:/reports/allure-results
+    networks: [testnet]
+
+  allure:
+    image: frankescobar/allure-docker-service:latest
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./reports/allure-results:/app/allure-results
+      - ./reports/allure-report:/app/default-reports
+    networks: [testnet]
 
 networks:
   testnet:

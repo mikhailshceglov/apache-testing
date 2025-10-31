@@ -17,6 +17,8 @@
 * Рекомендуемая команда: `docker compose ...` (Compose v2 как плагин Docker).
 * Альтернатива (если стоит отдельный бинарник): `docker-compose ...`.
 
+> Агент собирается на базе **python:3.11-slim**
+
 Проверка:
 
 ```bash
@@ -31,18 +33,16 @@ docker compose version
 ```
 .
 ├── agent
-│   ├── Dockerfile
-│   └── tests
-│       ├── conftest.py
-│       ├── test_server.py
-│       ├── test_smoke_coreutils.py
-│       └── utils.py
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── tests
 ├── docker-compose.yml
 ├── image
-│   └── allure.png
+│   └── allure.png
 ├── README.md
 ├── reports
-│   └── allure-results/
+│   ├── allure-report
+│   └── allure-results
 └── target
     ├── Dockerfile
     └── entrypoint.sh
@@ -84,6 +84,11 @@ cp .env.example .env
 
 ```bash
 docker-compose run --rm agent
+```
+
+### 3.4. Просмотр отчета allure
+```bash
+docker compose up -d allure
 ```
 
 Тесты подключатся к target по SSH и выведут отчёт в консоль!
